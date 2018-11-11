@@ -279,10 +279,12 @@ def getAuthorAndSubmissionInfo(listOfFiles):
         else:
             submissionFile = csvFile
 
+    authorResult = getAuthorInfo(authorFile).get('infoData')
+    submissionResult = getSubmissionInfo(submissionFile).get('infoData')
     parsedResult = {}
 
     # Handling submission.csv
-    submissionLines = parseCSVFile(submissionFile)[1:]
+    submissionLines = parseCSVFile(submissionFile)
     submissionLines = [ele for ele in submissionLines if ele]
 
     # Handling author.csv
@@ -312,7 +314,10 @@ def getAuthorAndSubmissionInfo(listOfFiles):
     parsedResult['topAcceptedAffiliations'] = {'labels': [ele[0] for ele in topAffiliations],
                                        'data': [ele[1] for ele in topAffiliations]}
 
-    return {'infoType': 'authorAndSubmission', 'infoData': parsedResult}
+
+    finalResults = merge_two_dicts(authorResult, parsedResult)
+    finalResults = merge_two_dicts(finalResults, submissionResult)
+    return {'infoType': 'authorAndSubmission', 'infoData': finalResults}
 
 
 def getAuthorAndReviewInfo(listOfFiles):
@@ -322,6 +327,8 @@ def getAuthorAndReviewInfo(listOfFiles):
         else:
             reviewFile = csvFile
 
+    authorResult = getAuthorInfo(authorFile).get('infoData')
+    reviewResult = getReviewInfo(reviewFile).get('infoData')
     parsedResult = {}
 
     # Handling review.csv
@@ -354,12 +361,20 @@ def getAuthorAndReviewInfo(listOfFiles):
     parsedResult['topBestPPAffiliations'] = {'labels': [ele[0] for ele in topAffiliations],
                                        'data': [ele[1] for ele in topAffiliations]}
 
-    return {'infoType': 'authorAndReview', 'infoData': parsedResult}
+    finalResults = merge_two_dicts(authorResult, parsedResult)
+    finalResults = merge_two_dicts(finalResults, reviewResult)
+    return {'infoType': 'authorAndReview', 'infoData': finalResults}
 
 
 def invalidFiles():
     parsedResult = {}
     return {'infoType': 'invalidFiles', 'infoData': parsedResult}
+
+
+def merge_two_dicts(x, y):
+    z = x.copy()   # start with x's keys and values
+    z.update(y)    # modifies z with y's keys and values & returns None
+    return z
 
 
 if __name__ == "__main__":
