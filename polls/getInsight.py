@@ -279,8 +279,9 @@ def getAuthorAndSubmissionInfo(listOfFiles):
         else:
             submissionFile = csvFile
 
-    authorResult = getAuthorInfo(authorFile).get('infoData')
-    submissionResult = getSubmissionInfo(submissionFile).get('infoData')
+    # Get Individual File results
+    # authorResult = getAuthorInfo(authorFile).get('infoData')
+    # submissionResult = getSubmissionInfo(submissionFile).get('infoData')
     parsedResult = {}
 
     # Handling submission.csv
@@ -293,13 +294,8 @@ def getAuthorAndSubmissionInfo(listOfFiles):
 
     # Handling combination
     authorList = []
-    # if submission # from author == from submission
-    # consolidate all the submissions first //submissions at outer loop, only increment after all authors with tat number is added
-    # only append accepted submissions to the list
     for submissionInfo in submissionLines:
         for authorInfo in authorLines:
-            # print "Submission# (author) : " + str(authorInfo[0])
-            # print "Submission# (submission) : " + str(submissionInfo[0])
             if str(submissionInfo[9]) == 'accept' and str(authorInfo[0]) == str(submissionInfo[0]):
                 authorList.append({'name': authorInfo[1] + " " + authorInfo[2], 'country': authorInfo[4], 'affiliation': authorInfo[5]})
 
@@ -314,10 +310,28 @@ def getAuthorAndSubmissionInfo(listOfFiles):
     parsedResult['topAcceptedAffiliations'] = {'labels': [ele[0] for ele in topAffiliations],
                                        'data': [ele[1] for ele in topAffiliations]}
 
+    topCountriesLabel = [ele[0] for ele in topCountries]
+    topCountriesKeywordDict = dict((el, []) for el in topCountriesLabel)
+    for submissionInfo in submissionLines:
+        for authorInfo in authorLines:
+            if str(authorInfo[0]) == str(submissionInfo[0]) and authorInfo[4] in topCountriesLabel:
+                allKeywords = str(submissionInfo[8]).lower().replace("\r", "").split("\n")
+                topCountriesKeywordDict[authorInfo[4]].extend(allKeywords)
 
-    finalResults = merge_two_dicts(authorResult, parsedResult)
-    finalResults = merge_two_dicts(finalResults, submissionResult)
-    return {'infoType': 'authorAndSubmission', 'infoData': finalResults}
+    topCountryKeyword = []
+    topCOuntryKeywordCount = []
+    for country in topCountriesLabel:
+        temp = Counter(topCountriesKeywordDict[country]).most_common(1)
+        topCountryKeyword.append(temp[0][0])
+        topCOuntryKeywordCount.append(temp[0][1])
+
+    parsedResult['topCountryKeyword'] = {'labels': topCountryKeyword,
+                                       'data': topCOuntryKeywordCount}
+
+    # Merge all data into one dict
+    # finalResults = merge_two_dicts(authorResult, parsedResult)
+    # finalResults = merge_two_dicts(finalResults, submissionResult)
+    return {'infoType': 'authorAndSubmission', 'infoData': parsedResult}
 
 
 def getAuthorAndReviewInfo(listOfFiles):
@@ -327,15 +341,13 @@ def getAuthorAndReviewInfo(listOfFiles):
         else:
             reviewFile = csvFile
 
-    authorResult = getAuthorInfo(authorFile).get('infoData')
-    reviewResult = getReviewInfo(reviewFile).get('infoData')
+    #authorResult = getAuthorInfo(authorFile).get('infoData')
+    #reviewResult = getReviewInfo(reviewFile).get('infoData')
     parsedResult = {}
 
     # Handling review.csv
     reviewLines = parseCSVFile(reviewFile)
     reviewLines = [ele for ele in reviewLines if ele]
-    #evaluation = [str(line[6]).replace("\r", "") for line in lines]
-    #submissionIDs = set([str(line[1]) for line in lines])
 
     # Handling author.csv
     authorLines = parseCSVFile(authorFile)
@@ -361,14 +373,14 @@ def getAuthorAndReviewInfo(listOfFiles):
     parsedResult['topBestPPAffiliations'] = {'labels': [ele[0] for ele in topAffiliations],
                                        'data': [ele[1] for ele in topAffiliations]}
 
-    finalResults = merge_two_dicts(authorResult, parsedResult)
-    finalResults = merge_two_dicts(finalResults, reviewResult)
-    return {'infoType': 'authorAndReview', 'infoData': finalResults}
+    # Merge the data into one dict
+    #finalResults = merge_two_dicts(authorResult, parsedResult)
+    #finalResults = merge_two_dicts(finalResults, reviewResult)
+    return {'infoType': 'authorAndReview', 'infoData': parsedResult}
 
 
 def invalidFiles():
-    parsedResult = {}
-    return {'infoType': 'invalidFiles', 'infoData': parsedResult}
+    return {'infoType': 'invalidFiles', 'infoData': {}}
 
 
 def merge_two_dicts(x, y):
