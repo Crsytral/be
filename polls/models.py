@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from utils import parseCSVFile, parseSubmissionTime
 from collections import Counter
 
@@ -10,9 +9,8 @@ class Author:
     self.lines = [ele for ele in lines if ele]
     authorList = []
 
-    for authorInfo in lines:
-        # authorInfo = line.replace("\"", "").split(",")
-        # print authorInfo
+    for authorInfo in self.lines:
+        #authorInfo = authorInfo.replace("\"", "").split(",")
         authorList.append({'name': authorInfo[1] + " " + authorInfo[2], 'country': authorInfo[4], 'affiliation': authorInfo[5]})
 
     authors = [ele['name'] for ele in authorList if ele] # adding in the if ele in case of empty strings; same applies below
@@ -35,13 +33,13 @@ class Submission:
     def __init__(self, inputFile):
         lines = parseCSVFile(inputFile)[1:]
         self.lines = [ele for ele in lines if ele]
-        acceptedSubmission = [line for line in lines if str(line[9]) == 'accept']
-        rejectedSubmission = [line for line in lines if str(line[9]) == 'reject']
+        acceptedSubmission = [line for line in self.lines if str(line[9]) == 'accept']
+        rejectedSubmission = [line for line in self.lines if str(line[9]) == 'reject']
 
-        self.acceptanceRate = float(len(acceptedSubmission)) / len(lines)
+        self.acceptanceRate = float(len(acceptedSubmission)) / len(self.lines)
 
-        submissionTimes = [parseSubmissionTime(str(ele[5])) for ele in lines]
-        lastEditTimes = [parseSubmissionTime(str(ele[6])) for ele in lines]
+        submissionTimes = [parseSubmissionTime(str(ele[5])) for ele in self.lines]
+        lastEditTimes = [parseSubmissionTime(str(ele[6])) for ele in self.lines]
         submissionTimes = Counter(submissionTimes)
         lastEditTimes = Counter(lastEditTimes)
         timeStamps = sorted([k for k in submissionTimes])
@@ -79,13 +77,13 @@ class Submission:
         self.rejectedKeywordMap = {k: v for k, v in Counter(rejectedKeywords).iteritems()}
         self.rejectedKeywordList = [[ele[0], ele[1]] for ele in Counter(rejectedKeywords).most_common(20)]
 
-        allKeywords = [str(ele[8]).lower().replace("\r", "").split("\n") for ele in lines]
+        allKeywords = [str(ele[8]).lower().replace("\r", "").split("\n") for ele in self.lines]
         allKeywords = [ele for item in allKeywords for ele in item]
         self.allKeywordMap = {k: v for k, v in Counter(allKeywords).iteritems()}
         self.allKeywordList = [[ele[0], ele[1]] for ele in Counter(allKeywords).most_common(20)]
 
-        tracks = set([str(ele[2]) for ele in lines])
-        paperGroupsByTrack = {track: [line for line in lines if str(line[2]) == track] for track in tracks}
+        tracks = set([str(ele[2]) for ele in self.lines])
+        paperGroupsByTrack = {track: [line for line in self.lines if str(line[2]) == track] for track in tracks}
         self.keywordsGroupByTrack = {}
         self.acceptanceRateByTrack = {}
         self.comparableAcceptanceRate = {}
@@ -148,8 +146,8 @@ class Review:
 
         lines = parseCSVFile(inputFile)
         self.lines = [ele for ele in lines if ele]
-        evaluation = [str(line[6]).replace("\r", "") for line in lines]
-        submissionIDs = set([str(line[1]) for line in lines])
+        evaluation = [str(line[6]).replace("\r", "") for line in self.lines]
+        submissionIDs = set([str(line[1]) for line in self.lines])
 
         self.scoreList = []
         self.recommendList = []
@@ -171,7 +169,7 @@ class Review:
             self.recommendDistributionLabels[index] = str(0 + 0.1 * index) + " ~ " + str(0 + 0.1 * index + 0.1)
 
         for submissionID in submissionIDs:
-            reviews = [str(line[6]).replace("\r", "") for line in lines if str(line[1]) == submissionID]
+            reviews = [str(line[6]).replace("\r", "") for line in self.lines if str(line[1]) == submissionID]
             # print reviews
             confidences = [float(review.split("\n")[1].split(": ")[1]) for review in reviews]
             scores = [float(review.split("\n")[0].split(": ")[1]) for review in reviews]
